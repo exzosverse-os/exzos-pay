@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "develop"]
     paths:
       - "server/**"
       - ".github/workflows/deploy.yml"
@@ -34,13 +34,13 @@ jobs:
   build:
     name: "Build Docker Image 🐳"
     concurrency:
-      group: build-deploy
+      group: build-deploy-${{ github.ref_name }}
       cancel-in-progress: true
 
     needs: changes
     if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 20
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: useblacksmith/setup-docker-builder@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -74,7 +74,7 @@ jobs:
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - uses: useblacksmith/build-push-action@v2
+      - uses: docker/build-push-action@v6
         id: push
         with:
           push: true
@@ -97,7 +97,7 @@ jobs:
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - uses: useblacksmith/build-push-action@v2
+      - uses: docker/build-push-action@v6
         id: push-playwright
         with:
           push: true
@@ -111,9 +111,13 @@ jobs:
             IPINFO_ACCESS_TOKEN=${{ secrets.IPINFO_ACCESS_TOKEN }}
 
   deploy-sandbox:
-    name: "Deploy to Sandbox 🧪"
+    name: "Deploy to Sandbox 🧪 (Preview)"
     needs: [changes, build]
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
+    if: >-
+      always() &&
+      github.ref_name == 'develop' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/deploy-environment.yml
     with:
       environment: sandbox
@@ -131,8 +135,12 @@ jobs:
 
   deploy-production:
     name: "Deploy to Production 🚀"
-    needs: [changes, build, deploy-sandbox]
-    if: always() && !failure() && !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
+    needs: [changes, build]
+    if: >-
+      always() &&
+      github.ref_name == 'main' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/deploy-environment.yml
     with:
       environment: production
