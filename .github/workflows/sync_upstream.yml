@@ -146,6 +146,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: sync-develop
     if: >-
+      always() &&
+      needs.sync-develop.result != 'failure' &&
+      (github.event_name == 'schedule' ||
+      github.event.inputs.target == 'both')
       github.event_name == 'schedule' ||
       github.event.inputs.target == 'both'
     steps:
