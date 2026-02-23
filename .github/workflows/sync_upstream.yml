@@ -150,6 +150,8 @@ jobs:
       needs.sync-develop.result != 'failure' &&
       (github.event_name == 'schedule' ||
       github.event.inputs.target == 'both')
+      github.event_name == 'schedule' ||
+      github.event.inputs.target == 'both'
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v6

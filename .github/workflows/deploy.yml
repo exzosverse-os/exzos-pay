@@ -5,8 +5,6 @@ on:
     branches: ["main"]
     paths:
       - "server/**"
-      - "clients/**"
-      - "!clients/apps/app/**"
       - ".github/workflows/deploy.yml"
       - ".github/workflows/deploy-environment.yml"
       - ".github/workflows/deploy_server.sh"
@@ -18,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
       migrations: ${{ steps.filter.outputs.migrations }}
     steps:
       - uses: actions/checkout@v6
@@ -31,10 +28,6 @@ jobs:
               - '.github/workflows/deploy.yml'
               - '.github/workflows/deploy-environment.yml'
               - '.github/workflows/deploy_server.sh'
-            frontend:
-              - 'clients/**'
-              - '.github/workflows/deploy.yml'
-              - '.github/workflows/deploy-environment.yml'
             migrations:
               - 'server/migrations/**'
 
@@ -72,7 +65,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/polarsource/polar
+            ghcr.io/exzosverse-os/exzos-pay
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -99,7 +92,7 @@ jobs:
         id: meta-playwright
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/polarsource/polar-playwright
+          images: ghcr.io/exzosverse-os/exzos-pay-playwright
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
@@ -120,7 +113,7 @@ jobs:
   deploy-sandbox:
     name: "Deploy to Sandbox 🧪"
     needs: [changes, build]
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch')
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/deploy-environment.yml
     with:
       environment: sandbox
@@ -131,19 +124,15 @@ jobs:
       render-playwright-worker-service-ids: "srv-d089jj7diees73934kgg"
       has-migrations: ${{ needs.changes.outputs.migrations == 'true' || github.event_name == 'workflow_dispatch' }}
       skip-backend: ${{ needs.changes.outputs.backend != 'true' && github.event_name != 'workflow_dispatch' }}
-      skip-frontend: ${{ needs.changes.outputs.frontend != 'true' && github.event_name != 'workflow_dispatch' }}
     secrets:
       RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
 
   deploy-production:
     name: "Deploy to Production 🚀"
     needs: [changes, build, deploy-sandbox]
-    if: always() && !failure() && !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch')
+    if: always() && !failure() && !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/deploy-environment.yml
     with:
       environment: production
@@ -154,11 +143,7 @@ jobs:
       render-playwright-worker-service-ids: "srv-d4k6otfgi27c73cicnpg"
       has-migrations: ${{ needs.changes.outputs.migrations == 'true' || github.event_name == 'workflow_dispatch' }}
       skip-backend: ${{ needs.changes.outputs.backend != 'true' && github.event_name != 'workflow_dispatch' }}
-      skip-frontend: ${{ needs.changes.outputs.frontend != 'true' && github.event_name != 'workflow_dispatch' }}
     secrets:
       RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
