@@ -50,7 +50,7 @@ Polar needs a [Python 3](https://www.python.org/downloads/) and [Node.js 24](htt
 > [!TIP]
 > Want to get started quickly? Use GitHub Codespaces.
 >
-> [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/polarsource/polar?machine=standardLinux32gb)
+> [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/exzosverse-os/exzos-pay?machine=standardLinux32gb)
 
 > [!TIP]
 > **New: `dev` CLI (beta)** - A single command to set up everything automatically.
