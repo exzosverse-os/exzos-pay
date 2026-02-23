@@ -146,8 +146,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: sync-develop
     if: >-
-      github.event_name == 'schedule' ||
-      github.event.inputs.target == 'both'
+      always() &&
+      needs.sync-develop.result != 'failure' &&
+      (github.event_name == 'schedule' ||
+      github.event.inputs.target == 'both')
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v4
