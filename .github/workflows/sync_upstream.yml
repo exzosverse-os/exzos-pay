@@ -30,7 +30,7 @@ jobs:
       has_new_commits: ${{ steps.check.outputs.has_new_commits }}
     steps:
       - name: Checkout source branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: source
           fetch-depth: 0
@@ -78,7 +78,7 @@ jobs:
       )
     steps:
       - name: Checkout develop branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: develop
           fetch-depth: 0
@@ -152,7 +152,7 @@ jobs:
       github.event.inputs.target == 'both')
     steps:
       - name: Checkout develop branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: develop
           fetch-depth: 0
