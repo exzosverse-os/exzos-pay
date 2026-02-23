@@ -9,7 +9,12 @@ if [ $# -lt 4 ]; then
   exit 1
 fi
 
-IMG="ghcr.io/polarsource/polar@${1}"
+if [[ -z "${RENDER_API_TOKEN:-}" ]]; then
+  echo "❌ RENDER_API_TOKEN is not set or is empty. Cannot deploy to Render."
+  exit 1
+fi
+
+IMG="ghcr.io/exzosverse-os/exzos-pay@${1}"
 HAS_MIGRATIONS="${2}"
 API_SERVICE_ID="${3}"
 WORKER_SERVICE_IDS="${4}"
@@ -54,19 +59,23 @@ deploy_servers() {
     echo "  Triggering deployment for ${server_id}..."
 
     # Use API to get deploy ID
-    deploy_response=$(curl -s -X POST \
+    local http_code
+    deploy_response=$(curl -s -w "\n%{http_code}" -X POST \
       -H "Accept: application/json" \
       -H "Authorization: Bearer ${RENDER_API_TOKEN}" \
       -H "Content-Type: application/json" \
       -d "{\"imageUrl\":\"${img}\"}" \
       "https://api.render.com/v1/services/${server_id}/deploys")
 
+    http_code=$(echo "$deploy_response" | tail -1)
+    deploy_response=$(echo "$deploy_response" | sed '$d')
+
     deploy_id=$(echo "$deploy_response" | jq -r '.id' 2>/dev/null)
     if [[ "$deploy_id" != "null" && -n "$deploy_id" ]]; then
       deploy_map["$server_id"]="$deploy_id"
       echo "    Deploy ID: ${deploy_id}"
     else
-      echo "    ❌ Failed to trigger deployment for ${server_id}"
+      echo "    ❌ Failed to trigger deployment for ${server_id} (HTTP ${http_code})"
       echo "    Response: ${deploy_response}"
       exit 1
     fi
@@ -132,7 +141,7 @@ PLAYWRIGHT_WORKER_IDS="${6:-}"
 PLAYWRIGHT_SERVERS=()
 PLAYWRIGHT_IMG=""
 if [[ -n "$PLAYWRIGHT_DIGEST" && -n "$PLAYWRIGHT_WORKER_IDS" ]]; then
-  PLAYWRIGHT_IMG="ghcr.io/polarsource/polar-playwright@${PLAYWRIGHT_DIGEST}"
+  PLAYWRIGHT_IMG="ghcr.io/exzosverse-os/exzos-pay-playwright@${PLAYWRIGHT_DIGEST}"
   IFS=',' read -ra PLAYWRIGHT_SERVERS <<< "$PLAYWRIGHT_WORKER_IDS"
 fi
 
