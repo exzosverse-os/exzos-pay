@@ -65,7 +65,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/polarsource/polar
+            ghcr.io/exzosverse-os/exzos-pay
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -92,7 +92,7 @@ jobs:
         id: meta-playwright
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/polarsource/polar-playwright
+          images: ghcr.io/exzosverse-os/exzos-pay-playwright
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
