@@ -10,6 +10,7 @@ import { getServerSideAPI } from '@/utils/client/serverside'
 import { CONFIG } from '@/utils/config'
 import { getAuthenticatedUser, getUserOrganizations } from '@/utils/user'
 import { schemas } from '@polar-sh/client'
+import { Analytics } from '@vercel/analytics/next'
 import { GeistMono } from 'geist/font/mono'
 import { PHASE_PRODUCTION_BUILD } from 'next/constants'
 import { Inter } from 'next/font/google'
@@ -175,6 +176,7 @@ export default async function RootLayout({
             </PolarPostHogProvider>
           </UserContextProvider>
         </ExperimentProvider>
+        <Analytics />
       </body>
     </html>
   )
